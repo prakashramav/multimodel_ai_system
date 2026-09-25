@@ -15,9 +15,19 @@ backend/storage/uploads/*
 backend/storage/pages/*
 !backend/storage/pages/.gitkeep
 
-# Environment variables
+# Environment variables & examples
 .env
+.env.*
+.env.example
+*.env
+*.env.*
+*.env.example
 backend/.env
+backend/.env.*
+backend/.env.example
+frontend/.env
+frontend/.env.*
+frontend/.env.example
 
 # Node
 node_modules/
