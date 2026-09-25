@@ -53,7 +53,7 @@ async def health_check():
     return {
         "status": "healthy",
         "service": settings.PROJECT_NAME,
-        "anthropic_configured": bool(settings.ANTHROPIC_API_KEY),
+        "gemini_configured": bool(settings.GEMINI_API_KEY),
         "confidence_threshold": settings.CONFIDENCE_THRESHOLD,
         "ocr_provider": settings.OCR_PROVIDER
     }

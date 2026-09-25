@@ -1,7 +1,7 @@
-import base64
 import json
 from pathlib import Path
 from typing import Optional
+from PIL import Image
 from backend.app.core.config import settings
 from backend.app.core.storage import storage
 from backend.app.schemas.base import ClassificationOutput
@@ -9,12 +9,12 @@ from backend.app.services.mock_engine import mock_engine
 
 class ClassificationService:
     def __init__(self):
-        self.api_key = settings.ANTHROPIC_API_KEY
+        self.api_key = settings.GEMINI_API_KEY
         self.client = None
         if self.api_key:
             try:
-                import anthropic
-                self.client = anthropic.AsyncAnthropic(api_key=self.api_key)
+                from google import genai
+                self.client = genai.Client(api_key=self.api_key)
             except Exception:
                 self.client = None
 
@@ -25,7 +25,7 @@ class ClassificationService:
         filename: str
     ) -> ClassificationOutput:
         """
-        Classifies document type using Claude Vision API, or fallback heuristic engine.
+        Classifies document type using Google Gemini Vision API, or fallback heuristic engine.
         Taxonomy: invoice, resume, receipt, contract, form, other
         """
         if not self.client or not self.api_key:
@@ -33,9 +33,10 @@ class ClassificationService:
             return mock_engine.classify_heuristically(extracted_text, filename)
 
         try:
+            from google.genai import types
+
             full_img_path = await storage.get_file_path(first_page_rel_path)
-            with open(full_img_path, "rb") as img_file:
-                b64_image = base64.b64encode(img_file.read()).decode("utf-8")
+            pil_img = Image.open(full_img_path).convert("RGB")
 
             prompt = (
                 "You are an expert document classification AI. Analyze the image and text of the first page of this document.\n"
@@ -56,40 +57,26 @@ class ClassificationService:
                 "}"
             )
 
-            response = await self.client.messages.create(
-                model=settings.ANTHROPIC_MODEL,
-                max_tokens=400,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": "image/png",
-                                    "data": b64_image
-                                }
-                            },
-                            {
-                                "type": "text",
-                                "text": prompt
-                            }
-                        ]
-                    }
-                ]
+            response = self.client.models.generate_content(
+                model=settings.GEMINI_MODEL,
+                contents=[pil_img, prompt],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.1
+                )
             )
 
-            raw_text = response.content[0].text
+            raw_text = response.text
             # Extract JSON block
             json_match = raw_text
             if "{" in raw_text and "}" in raw_text:
                 json_match = raw_text[raw_text.find("{"):raw_text.rfind("}")+1]
             data = json.loads(json_match)
+
             return ClassificationOutput(
                 document_type=data.get("document_type", "invoice"),
-                confidence=float(data.get("confidence", 0.9)),
-                reasoning=data.get("reasoning", "Classified via Claude Vision")
+                confidence=float(data.get("confidence", 0.95)),
+                reasoning=data.get("reasoning", "Classified via Google Gemini Vision")
             )
         except Exception as e:
             # Graceful fallback on API error or rate limit

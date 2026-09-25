@@ -138,7 +138,7 @@ def create_sample_resume():
     draw.text((60, y), "CORE TECHNICAL SKILLS", fill="#0F172A")
     draw.line([(60, y + 22), (w - 60, y + 22)], fill="#CBD5E1", width=2)
     draw.text((60, y + 35), "Languages & Frameworks: Python, TypeScript, FastAPI, Next.js, PyTorch, SQLAlchemy, React, Go", fill="#1E293B")
-    draw.text((60, y + 60), "AI & Multimodal: Claude Vision APIs, OpenAI, Transformers, LangChain, DocVQA, RAG, Tesseract OCR", fill="#1E293B")
+    draw.text((60, y + 60), "AI & Multimodal: Gemini Multimodal Vision APIs, OpenAI, Transformers, LangChain, DocVQA, RAG, Tesseract OCR", fill="#1E293B")
     draw.text((60, y + 85), "Cloud & Infra: AWS (S3, ECS, Lambda), Docker, PostgreSQL, Redis, Kubernetes, Kafka, CI/CD", fill="#1E293B")
 
     # Experience Section

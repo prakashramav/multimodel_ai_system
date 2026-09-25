@@ -1,6 +1,6 @@
-import base64
 import json
 from typing import List, Dict, Any
+from PIL import Image
 from backend.app.core.config import settings
 from backend.app.core.storage import storage
 from backend.app.schemas.base import ExtractedTableItem
@@ -9,12 +9,12 @@ from backend.app.services.mock_engine import mock_engine
 
 class TableService:
     def __init__(self):
-        self.api_key = settings.ANTHROPIC_API_KEY
+        self.api_key = settings.GEMINI_API_KEY
         self.client = None
         if self.api_key:
             try:
-                import anthropic
-                self.client = anthropic.AsyncAnthropic(api_key=self.api_key)
+                from google import genai
+                self.client = genai.Client(api_key=self.api_key)
             except Exception:
                 self.client = None
 
@@ -25,7 +25,7 @@ class TableService:
         filename: str
     ) -> List[ExtractedTableItem]:
         """
-        Extracts tabular regions (e.g. invoice line items, resume work history, receipt purchased items).
+        Extracts tabular regions (e.g. invoice line items, resume work history, receipt purchased items) using Google Gemini.
         Returns list of ExtractedTableItem.
         """
         if not self.client or not self.api_key:
@@ -40,15 +40,15 @@ class TableService:
         default_name = schema_info.get("default_table_name", "Data Table")
 
         try:
-            # We can prompt Claude to extract tables as JSON
+            from google.genai import types
+
             full_path = await storage.get_file_path(pages_info[0]["image_path"])
-            with open(full_path, "rb") as f:
-                b64 = base64.b64encode(f.read()).decode("utf-8")
+            pil_img = Image.open(full_path).convert("RGB")
 
             prompt = (
-                f"You are a specialized table extraction model. Detect any tabular regions in this {doc_type} "
-                f"(such as {default_name}).\n"
-                f"Extract the table into a strict JSON object:\n"
+                f"You are a specialized table extraction vision AI powered by Google Gemini. "
+                f"Detect any tabular regions in this {doc_type} (such as {default_name}).\n"
+                f"Extract the table into a strict JSON object matching this schema:\n"
                 "{\n"
                 f'  "table_name": "{default_name}",\n'
                 '  "columns": ["Col 1", "Col 2", ...],\n'
@@ -57,34 +57,19 @@ class TableService:
                 '  ],\n'
                 '  "confidence": 0.95\n'
                 "}\n"
-                "Return ONLY this JSON object."
+                "Return ONLY valid JSON."
             )
 
-            response = await self.client.messages.create(
-                model=settings.ANTHROPIC_MODEL,
-                max_tokens=2000,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": "image/png",
-                                    "data": b64
-                                }
-                            },
-                            {
-                                "type": "text",
-                                "text": prompt
-                            }
-                        ]
-                    }
-                ]
+            response = self.client.models.generate_content(
+                model=settings.GEMINI_MODEL,
+                contents=[pil_img, prompt],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.1
+                )
             )
 
-            raw = response.content[0].text
+            raw = response.text
             if "{" in raw and "}" in raw:
                 raw_json = raw[raw.find("{"):raw.rfind("}")+1]
                 data = json.loads(raw_json)

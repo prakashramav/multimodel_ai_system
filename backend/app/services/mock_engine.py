@@ -328,7 +328,7 @@ class MockEngine:
                 field_name="tools_frameworks",
                 field_label="Tools & Frameworks",
                 section="Professional Profile",
-                value="Claude Vision, OpenAI, Transformers, LangChain, DocVQA, RAG, AWS, Docker, Kubernetes",
+                value="Gemini Multimodal Vision, OpenAI, Transformers, LangChain, DocVQA, RAG, AWS, Docker, Kubernetes",
                 confidence=0.95,
                 bbox=BoundingBox(ymin=215, xmin=47, ymax=240, xmax=800, page=1),
                 page_number=1

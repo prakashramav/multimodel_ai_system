@@ -4,12 +4,12 @@ from backend.app.core.config import settings
 
 class QAService:
     def __init__(self):
-        self.api_key = settings.ANTHROPIC_API_KEY
+        self.api_key = settings.GEMINI_API_KEY
         self.client = None
         if self.api_key:
             try:
-                import anthropic
-                self.client = anthropic.AsyncAnthropic(api_key=self.api_key)
+                from google import genai
+                self.client = genai.Client(api_key=self.api_key)
             except Exception:
                 self.client = None
 
@@ -22,7 +22,7 @@ class QAService:
         pages: List[Dict[str, Any]]
     ) -> Tuple[str, List[str]]:
         """
-        Answers a free-form question grounded strictly in document content.
+        Answers a free-form question grounded strictly in document content using Google Gemini.
         Returns: (answer_string, list_of_grounded_sources)
         """
         # Build context
@@ -50,10 +50,10 @@ class QAService:
 
         full_context = "\n".join(context_parts)
 
-        # If Claude client is available:
+        # If Gemini client is available:
         if self.client and self.api_key:
             prompt = (
-                "You are a strict, grounded document question-answering assistant.\n"
+                "You are a strict, grounded document question-answering assistant powered by Google Gemini.\n"
                 "Answer the user's question relying ONLY on the provided document context below.\n"
                 "RULES:\n"
                 "1. If the information is not present or cannot be determined from the document, say explicitly: "
@@ -65,12 +65,15 @@ class QAService:
             )
 
             try:
-                response = await self.client.messages.create(
-                    model=settings.ANTHROPIC_MODEL,
-                    max_tokens=600,
-                    messages=[{"role": "user", "content": prompt}]
+                from google.genai import types
+                response = self.client.models.generate_content(
+                    model=settings.GEMINI_MODEL,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.1
+                    )
                 )
-                ans = response.content[0].text
+                ans = response.text
                 sources = []
                 if "Sources:" in ans:
                     src_part = ans.split("Sources:")[1]

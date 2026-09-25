@@ -90,7 +90,7 @@ export default function HomePage() {
             <Cpu className="w-4 h-4" />
           </div>
           <div className="text-xs">
-            <p className="font-semibold text-slate-200">Claude Vision + PyMuPDF</p>
+            <p className="font-semibold text-slate-200">Gemini Vision + PyMuPDF</p>
             <p className="text-[11px] text-slate-400">Schema Tool-Use Enforced</p>
           </div>
         </div>

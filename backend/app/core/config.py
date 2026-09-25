@@ -9,9 +9,9 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "DocIntel - Multimodal Document Intelligence Platform"
     API_V1_STR: str = "/api"
     
-    # Environment & Keys
-    ANTHROPIC_API_KEY: str = Field(default="", env="ANTHROPIC_API_KEY")
-    ANTHROPIC_MODEL: str = Field(default="claude-3-5-sonnet-20241022", env="ANTHROPIC_MODEL")
+    # Environment & Keys: Google Gemini Multimodal API
+    GEMINI_API_KEY: str = Field(default="", env=["GEMINI_API_KEY", "GOOGLE_API_KEY"])
+    GEMINI_MODEL: str = Field(default="gemini-2.5-flash", env="GEMINI_MODEL")
     
     # OCR Settings
     OCR_PROVIDER: str = Field(default="tesseract", env="OCR_PROVIDER") # tesseract, cloud, or native

@@ -2,7 +2,7 @@
 
 [![Next.js](https://img.shields.io/badge/Next.js-14+-black?style=flat&logo=next.js)](https://nextjs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
-[![Anthropic Claude](https://img.shields.io/badge/Anthropic-Claude_Vision-D97706?style=flat&logo=anthropic)](https://anthropic.com/)
+[![Google Gemini](https://img.shields.io/badge/Google-Gemini_Vision-4285F4?style=flat&logo=google)](https://ai.google.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-v4-38bdf8?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-red?style=flat)](https://www.sqlalchemy.org/)
 
@@ -26,7 +26,7 @@ Traditional Optical Character Recognition (OCR) and document extraction pipeline
 
 DocIntel re-engineers document processing from the ground up by combining **multimodal vision AI**, **strict schema enforcement**, **spatial bounding box mapping**, and **human-in-the-loop verification**:
 
-- **Multimodal Visual Reasoning**: High-resolution page images are rasterized and passed directly to vision-capable LLMs (Claude 3.5 / 3.7 Sonnet) alongside OCR text. The model "sees" the document layout as a human would, understanding visual headers, tables, logos, and spatial groupings.
+- **Multimodal Visual Reasoning**: High-resolution page images are rasterized and passed directly to vision-capable LLMs (Google Gemini 2.5 / 1.5 Flash) alongside OCR text. The model "sees" the document layout as a human would, understanding visual headers, tables, logos, and spatial groupings.
 - **Strict Pydantic Schema & Tool-Use Enforcement**: Extractions are strictly constrained using defined Pydantic models per document type (`invoice`, `resume`, `receipt`, `contract`, etc.). The model must return typed fields conforming to the schema specification.
 - **Bidirectional Visual Grounding**: Every extracted field includes normalized bounding box coordinates (`[ymin, xmin, ymax, xmax]`). In the workspace split-view, hovering over any field lights up its exact location on the document page image, and clicking a bounding box focuses the corresponding field.
 - **Automated Human Review Queue**: Every extracted field carries a confidence score (`0.0` to `1.0`). Any field falling below the configurable threshold (e.g. `0.75`) is flagged, and the document is routed to a triage **Review Queue**. Reviewers can verify or correct fields inline with full audit trail history. Once resolved, the document status updates to `auto_approved`.
@@ -69,7 +69,7 @@ graph TD
 2. **Preprocess**: Each page is rasterized to a high-DPI image (`144-150 DPI`) for crisp vision LLM reasoning. The native text layer is extracted via `pypdf`, with Tesseract OCR fallback for scanned pages.
 3. **Classification**: Multimodal vision analyzes page 1 visual structure and text to classify the document into fixed taxonomy (`invoice`, `resume`, `receipt`, `contract`, `form`, `other`) with reasoning.
 4. **Schema Selection**: The classification type dynamically selects the Pydantic schema and tool definition from the registry.
-5. **Structured Extraction**: Claude Vision receives the page images and text context, invoking the schema tool to return structured fields, normalized spatial bounding boxes, and per-field confidence scores.
+5. **Structured Extraction**: Google Gemini Vision receives the page images and text context, returning typed structured fields, normalized spatial bounding boxes, and per-field confidence scores.
 6. **Table Extraction**: A dedicated pass parses tabular regions (e.g. line items, work experience) into row objects.
 7. **Review Routing**: Fields with confidence below `CONFIDENCE_THRESHOLD` (e.g. `0.75`) are flagged. Document status is set to `needs_review` or `auto_approved`.
 8. **Persist & Audit**: Fields, tables, bounding boxes, original values, and metadata are saved to the database.
@@ -118,7 +118,7 @@ multimodal_AI_system/
 │   │   │   └── models.py       # Document, DocumentPage, ExtractedField, ExtractedTable, QAHistory
 │   │   ├── schemas/
 │   │   │   ├── base.py         # Base BoundingBox, ExtractedField, Table schemas
-│   │   │   ├── invoice.py      # Invoice schema sections & Claude Vision tool spec
+│   │   │   ├── invoice.py      # Invoice schema sections & Gemini Vision spec
 │   │   │   ├── resume.py       # Resume schema sections & tool spec
 │   │   │   ├── receipt.py      # Store receipt schema & tool spec
 │   │   │   ├── contract.py     # Legal contract schema & tool spec
