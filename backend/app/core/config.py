@@ -42,7 +42,11 @@ class Settings(BaseSettings):
     ]
 
     class Config:
-        env_file = ".env"
+        env_file = [
+            str(BASE_DIR / "backend" / ".env"),
+            str(BASE_DIR / ".env"),
+            ".env"
+        ]
         env_file_encoding = "utf-8"
         case_sensitive = True
 
