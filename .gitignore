@@ -10,6 +10,7 @@ venv/
 docintel.db
 
 # Storage & Uploads
+storage/
 backend/storage/uploads/*
 !backend/storage/uploads/.gitkeep
 backend/storage/pages/*
