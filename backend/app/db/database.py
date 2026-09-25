@@ -5,22 +5,30 @@ from backend.app.core.config import settings
 
 db_url = settings.DATABASE_URL
 
-# Handle Heroku/Railway postgres:// -> postgresql+asyncpg:// if needed
+# Handle Heroku/Railway/Supabase postgres:// or postgresql:// -> postgresql+asyncpg://
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
 elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+asyncpg://"):
     db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-# SQLite specific connect args
+# Asyncpg specific connect arguments
 connect_args = {}
 if "sqlite" in db_url:
     connect_args = {"check_same_thread": False}
+else:
+    # Supabase / Cloud Postgres optimizations for asyncpg
+    # Disabling statement cache allows compatibility with Supabase PgBouncer pooler (port 6543)
+    connect_args = {
+        "statement_cache_size": 0,
+        "prepared_statement_cache_size": 0
+    }
 
 engine = create_async_engine(
     db_url,
     echo=False,
     future=True,
-    connect_args=connect_args
+    connect_args=connect_args,
+    pool_pre_ping=True
 )
 
 AsyncSessionLocal = async_sessionmaker(
@@ -45,6 +53,6 @@ async def get_db():
             await session.close()
 
 async def init_db():
-    """Initializes tables for local sqlite / dev out-of-the-box."""
+    """Initializes tables for dev / cloud Postgres out-of-the-box."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
