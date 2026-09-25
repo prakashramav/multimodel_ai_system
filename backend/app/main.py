@@ -36,14 +36,35 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS configuration
+# CORS configuration - Allow local frontend, production domain, and preview environments
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow local frontend development
+    allow_origins=["*"],
+    allow_origin_regex=r"^https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
+
+# Root endpoint
+@app.get("/", tags=["Root"])
+async def root():
+    return {
+        "status": "online",
+        "service": settings.PROJECT_NAME,
+        "version": "1.0.0",
+        "docs_url": "/docs",
+        "redoc_url": "/redoc",
+        "health_check": "/api/health",
+        "api_endpoints": {
+            "documents": f"{settings.API_V1_STR}/documents",
+            "upload": f"{settings.API_V1_STR}/documents/upload",
+            "review_queue": f"{settings.API_V1_STR}/review-queue",
+            "qa": f"{settings.API_V1_STR}/documents/{{id}}/ask",
+            "page_images": "/api/pages/{path}",
+        }
+    }
 
 # Include API routers
 app.include_router(documents.router, prefix=settings.API_V1_STR)
