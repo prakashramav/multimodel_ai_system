@@ -1,6 +1,17 @@
 import os
+import sys
 from pathlib import Path
 from contextlib import asynccontextmanager
+
+# Ensure repository root and backend directory are in sys.path
+# This guarantees 'from backend.app...' imports work whether running from repo root or backend/ folder
+_APP_DIR = Path(__file__).resolve().parent
+_BACKEND_DIR = _APP_DIR.parent
+_REPO_ROOT = _BACKEND_DIR.parent
+for _path_str in [str(_REPO_ROOT), str(_BACKEND_DIR)]:
+    if _path_str not in sys.path:
+        sys.path.insert(0, _path_str)
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
